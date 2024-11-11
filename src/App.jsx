@@ -18,33 +18,40 @@ export const goodsFromServer = [
 const ALPHABET_SORT = 'alphabet';
 const STR_LENGTH_SORT = 'length';
 
+const getPreparedGoods = (goods, { sort, reverse }) => {
+  const preparedGoods = [...goods];
+
+  if (sort) {
+    preparedGoods.sort((good1, good2) => {
+      switch (sort) {
+        case ALPHABET_SORT:
+          return good1.localeCompare(good2);
+        case STR_LENGTH_SORT:
+          return good1.length - good2.length;
+        default:
+          return 0;
+      }
+    });
+  }
+
+  if (reverse) {
+    return preparedGoods.reverse();
+  }
+
+  return preparedGoods;
+};
+
 export const App = () => {
-  const [goodsList, setGoodsList] = useState(goodsFromServer);
-  const [rev, setRev] = useState(false);
+  const [sort, setSort] = useState('');
+  const [reverse, setReverse] = useState(false);
   const [classActive, setClassActive] = useState('');
-  const [reverseActive, setREverseActive] = useState(true);
 
-  const getPreparedGoods = (goods, { sort, reverse }) => {
-    const preparedGoods = [...goods];
+  const preparedGoods = getPreparedGoods(goodsFromServer, { sort, reverse });
 
-    if (sort) {
-      return preparedGoods.sort((good1, good2) => {
-        switch (sort) {
-          case ALPHABET_SORT:
-            return good1.localeCompare(good2);
-          case STR_LENGTH_SORT:
-            return good1.length - good2.length;
-          default:
-            return 0;
-        }
-      });
-    }
-
-    if (reverse) {
-      return preparedGoods.reverse();
-    }
-
-    return preparedGoods;
+  const resetFilters = () => {
+    setSort('');
+    setReverse(false);
+    setClassActive('');
   };
 
   return (
@@ -52,15 +59,8 @@ export const App = () => {
       <div className="buttons">
         <button
           onClick={() => {
-            const obj = {
-              sort: ALPHABET_SORT,
-              reverse: rev,
-            };
-
-            setGoodsList(getPreparedGoods(goodsList, obj));
-            setRev(true);
+            setSort(ALPHABET_SORT);
             setClassActive(ALPHABET_SORT);
-            setREverseActive(true);
           }}
           type="button"
           className={`button is-info ${classActive === ALPHABET_SORT ? '' : 'is-light'}`}
@@ -70,15 +70,8 @@ export const App = () => {
 
         <button
           onClick={() => {
-            const obj = {
-              sort: STR_LENGTH_SORT,
-              reverse: rev,
-            };
-
-            setGoodsList(getPreparedGoods(goodsList, obj));
-            setRev(true);
+            setSort(STR_LENGTH_SORT);
             setClassActive(STR_LENGTH_SORT);
-            setREverseActive(true);
           }}
           type="button"
           className={`button is-success ${classActive === STR_LENGTH_SORT ? '' : 'is-light'}`}
@@ -88,28 +81,18 @@ export const App = () => {
 
         <button
           onClick={() => {
-            const obj = {
-              sort: '',
-              reverse: rev,
-            };
-
-            setREverseActive(!reverseActive);
-
-            return rev ? setGoodsList(getPreparedGoods(goodsList, obj)) : null;
+            setSort(sort);
+            setReverse(!reverse);
           }}
           type="button"
-          className={`button is-warning ${classActive && reverseActive ? '' : 'is-light'}`}
+          className={`button is-warning ${reverse ? '' : 'is-light'}`}
         >
           Reverse
         </button>
 
-        {rev && (
+        {(sort || reverse) && (
           <button
-            onClick={() => {
-              setGoodsList(goodsFromServer);
-              setRev(false);
-              setClassActive('');
-            }}
+            onClick={() => resetFilters()}
             type="button"
             className="button is-danger is-light"
           >
@@ -119,7 +102,7 @@ export const App = () => {
       </div>
 
       <ul>
-        {goodsList.map(good => (
+        {preparedGoods.map(good => (
           <li data-cy="Good" key={good}>
             {good}
           </li>
